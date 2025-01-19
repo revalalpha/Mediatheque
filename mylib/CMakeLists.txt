@@ -5,10 +5,14 @@ set (SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 set(HEADERS
     ${HEADER_DIR}/LibrarySystem.h
+    ${HEADER_DIR}/Client.h
+    ${HEADER_DIR}/Console.h
 )
 
 set(SOURCES
     ${SOURCE_DIR}/LibrarySystem.cpp
+    ${SOURCE_DIR}/Client.cpp
+    ${SOURCE_DIR}/Console.cpp
 )
 
 add_library(${PROJECT_NAME}

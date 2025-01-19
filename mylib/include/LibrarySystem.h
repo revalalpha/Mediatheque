@@ -1,5 +1,5 @@
-#ifndef LIBRARYSYSTEM_HPP
-#define LIBRARYSYSTEM_HPP
+#ifndef LIBRARYSYSTEM_H
+#define LIBRARYSYSTEM_H
 
 class LibrarySystem 
 {
