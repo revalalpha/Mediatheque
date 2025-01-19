@@ -2,9 +2,6 @@
 #define CLIENT_H
 
 #include <string>
-#include <vector>
-#include <memory>
-#include <ostream>
 
 class Client {
 public:
@@ -14,8 +11,6 @@ public:
     std::string getName() const;
     std::string getFirstName() const;
     std::string getMail() const;
-
-    friend std::ostream& operator<<(std::ostream& os, const Client& client);
 
 private:
     std::string name;
