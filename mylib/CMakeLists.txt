@@ -7,12 +7,20 @@ set(HEADERS
     ${HEADER_DIR}/LibrarySystem.h
     ${HEADER_DIR}/Client.h
     ${HEADER_DIR}/Console.h
+    ${HEADER_DIR}/Media.h
+    ${HEADER_DIR}/Film.h
+    ${HEADER_DIR}/Book.h
+    ${HEADER_DIR}/Game.h
 )
 
 set(SOURCES
     ${SOURCE_DIR}/LibrarySystem.cpp
     ${SOURCE_DIR}/Client.cpp
     ${SOURCE_DIR}/Console.cpp
+    ${SOURCE_DIR}/Media.cpp
+    ${SOURCE_DIR}/Film.cpp
+    ${SOURCE_DIR}/Book.cpp
+    ${SOURCE_DIR}/Game.cpp
 )
 
 add_library(${PROJECT_NAME}
