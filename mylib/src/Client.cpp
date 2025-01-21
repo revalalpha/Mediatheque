@@ -17,3 +17,11 @@ std::string Client::getMail() const {
     return mail;
 }
 
+int Client::getAge() const {
+    return age;
+}
+
+bool Client::operator==(const Client& other) const {
+    return name == other.name;
+}
+

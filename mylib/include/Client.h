@@ -2,6 +2,7 @@
 #define CLIENT_H
 
 #include <string>
+#include <functional>
 
 class Client {
 public:
@@ -11,15 +12,22 @@ public:
     std::string getName() const;
     std::string getFirstName() const;
     std::string getMail() const;
+    int getAge() const;
+    bool operator==(const Client& other) const;
 
 private:
-    std::string name;
+    std::string name ;
     std::string firstName;
     int age;
     std::string address;
     std::string phoneNumber;
     std::string mail;
+};
 
+struct ClientHash {
+    size_t operator()(const Client& client) const {
+        return std::hash<std::string>()(client.getName());
+    }
 };
 
 #endif
