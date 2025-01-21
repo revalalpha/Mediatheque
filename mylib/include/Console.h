@@ -3,10 +3,11 @@
 
 #include <string>
 #include <vector>
+#include <stdexcept>
 
 enum Color
 {
-    Red
+      Red
     , Green
     , Blue
     , White
@@ -20,11 +21,11 @@ class ConsoleFramebuffer
 public:
     ConsoleFramebuffer();
     ~ConsoleFramebuffer();
-    void setCharacter(int row, int col, char car, Color foreground = White, Color background = Black);
+    void setString(std::string text, Color color = White, Color backColor = Black);
     void show();
-    void printString(int row, int col, const std::string& str, Color foreground = White, Color background = Black);
-    void clear();
-    void displayMenu(const std::vector<std::string>& options, int selectedIndex);
+    void updateConsoleSize();
+    void processInputEvents();
+    std::string getLastCommand();
 
 private:
     ConsoleFramebufferPrivateImpl* m_pimpl;

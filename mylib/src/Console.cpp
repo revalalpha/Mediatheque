@@ -7,36 +7,128 @@ class ConsoleFramebufferPrivateImpl
 {
 public:
     ConsoleFramebufferPrivateImpl();
-    void setCharacter(int row, int col, char car, Color foreground, Color background);
-    void printString(int row, int col, const std::string& str, Color foreground, Color background);
     void show();
-
+    void setString(std::string text, Color color = White, Color backColor = Black);
+    void updateSize();
+    void processInputEvents();
+    std::string getLastCommand();
 private:
+    void setCharacter(int row, int col, char car, Color foreground, Color background);
+    void copyStringToEnd(std::string string);
+    void addCommandToHistory(std::string& string);
     void resize(int numRows, int numCols);
-
+    void setString(int row, int i);
+    void eraseEmtpyHistory();
+    void printText();
 private:
-    HANDLE m_handle;
+    HANDLE m_handleOutput;
+    HANDLE m_handleInput;
     std::vector<CHAR_INFO> m_buffer;
+    SHORT windowWidth;
+    SHORT windowHeight;
     int m_numRows;
     int m_numCols;
+    int m_idx;
+    std::string m_lastCommand;
+    std::vector<std::string> m_orderHistory;
+    std::vector <std::string> m_toWrite;
+    std::vector <Color> m_colorToWrite;
+    std::vector <Color> m_backColorToWrite;
 };
 
-
-
-ConsoleFramebufferPrivateImpl::ConsoleFramebufferPrivateImpl() : m_handle(::GetStdHandle(STD_OUTPUT_HANDLE))
+void ConsoleFramebufferPrivateImpl::updateSize()
 {
     CONSOLE_SCREEN_BUFFER_INFO sbi;
-    BOOL result = GetConsoleScreenBufferInfo(m_handle, &sbi);
-    resize(sbi.dwSize.Y, sbi.dwSize.X);
+    BOOL result = GetConsoleScreenBufferInfo(m_handleOutput, &sbi);
+    windowWidth = sbi.srWindow.Right - sbi.srWindow.Left + 1;
+    windowHeight = sbi.srWindow.Bottom - sbi.srWindow.Top + 1;
+    resize(windowHeight, windowWidth);
+    eraseEmtpyHistory();
+}
+
+void ConsoleFramebufferPrivateImpl::processInputEvents()
+{
+    INPUT_RECORD inputRecord;
+    DWORD events;
+    ReadConsoleInput(m_handleInput, &inputRecord, 1, &events);
+    if (inputRecord.EventType == KEY_EVENT && inputRecord.Event.KeyEvent.bKeyDown)
+    {
+        wchar_t key = inputRecord.Event.KeyEvent.uChar.UnicodeChar;
+        WORD virtualKey = inputRecord.Event.KeyEvent.wVirtualKeyCode;
+        if (key == '\r') // ENTER
+        {
+            // Save the last command
+            m_lastCommand = m_orderHistory[m_idx];
+            if (m_idx != m_orderHistory.size() - 1)
+                copyStringToEnd(m_orderHistory[m_idx]);
+            std::string newstring;
+            addCommandToHistory(newstring);
+        }
+        else if (virtualKey == VK_UP) // UP
+        {
+            if (m_idx > 0)
+                --m_idx;
+        }
+        else if (virtualKey == VK_DOWN) // DOWN
+        {
+            if (m_idx < static_cast<int>(m_orderHistory.size()) - 1)
+                ++m_idx;
+        }
+        else if (key >= 32)
+        {
+            // Duplicate the last string
+            if (m_idx != m_orderHistory.size() - 1)
+                copyStringToEnd(m_orderHistory[m_idx]);
+            m_orderHistory[m_idx] += key;
+        }
+        else if (key == '\b' && !m_orderHistory[m_idx].empty())
+        {
+            // Duplicate the last string
+            if (m_idx != m_orderHistory.size() - 1)
+                copyStringToEnd(m_orderHistory[m_idx]);
+            m_orderHistory[m_idx].pop_back();
+        }
+    }
+}
+
+std::string ConsoleFramebufferPrivateImpl::getLastCommand()
+{
+    return m_lastCommand;
+}
+
+void ConsoleFramebufferPrivateImpl::copyStringToEnd(std::string string)
+{
+    if (m_orderHistory.empty() || m_orderHistory.back() != string) {
+        std::string newstring = string;
+        addCommandToHistory(newstring);
+    }
+}
+
+void ConsoleFramebufferPrivateImpl::addCommandToHistory(std::string& string)
+{
+    m_orderHistory.push_back(string);
+    m_idx = m_orderHistory.size() - 1;
+}
+
+ConsoleFramebufferPrivateImpl::ConsoleFramebufferPrivateImpl() :m_handleOutput(GetStdHandle(STD_OUTPUT_HANDLE)), m_handleInput(::GetStdHandle(STD_INPUT_HANDLE)), m_idx(0)
+{
+    //First command
+    m_orderHistory.reserve(1);
+    m_orderHistory.resize(1);
+    updateSize();
 }
 
 void ConsoleFramebufferPrivateImpl::resize(int numRows, int numCols)
 {
-    m_numRows = numRows;
-    m_numCols = numCols;
-
-    m_buffer.resize(m_numRows * m_numCols);
-    ::ZeroMemory(&m_buffer[0], m_numRows * m_numCols * sizeof(CHAR_INFO));
+    try {
+        m_numRows = numRows;
+        m_numCols = numCols;
+        m_buffer.resize(m_numRows * m_numCols);
+        ::ZeroMemory(&m_buffer[0], m_numRows * m_numCols * sizeof(CHAR_INFO));
+    }
+    catch (const std::bad_alloc& e) {
+        std::cerr << "Memory allocation failed during resize: " << e.what() << std::endl;
+    }
 }
 
 WORD convertForegroundColorToWindows(Color foreground)
@@ -59,7 +151,8 @@ WORD convertForegroundColorToWindows(Color foreground)
         return 0;
 
     default:
-        throw;
+        throw std::invalid_argument("Invalid color value provided.");
+
     }
 }
 
@@ -82,6 +175,7 @@ void ConsoleFramebufferPrivateImpl::setCharacter(int row, int col, char car, Col
 
 void ConsoleFramebufferPrivateImpl::show()
 {
+    printText();
     COORD dwBufferSize;
     dwBufferSize.X = m_numCols;
     dwBufferSize.Y = m_numRows;
@@ -96,12 +190,16 @@ void ConsoleFramebufferPrivateImpl::show()
     writeRegion.Bottom = m_numRows - 1;
 
     BOOL result = WriteConsoleOutput(
-        m_handle,
+        m_handleOutput,
         &m_buffer[0],
         dwBufferSize,
         dwBufferCoord,
         &writeRegion
     );
+
+    if (!result) {
+        std::cerr << "WriteConsoleOutput failed with error code: " << GetLastError() << std::endl;
+    }
 }
 
 int myMin(int a, int b)
@@ -109,16 +207,52 @@ int myMin(int a, int b)
     return (a > b) ? b : a;
 }
 
-void ConsoleFramebufferPrivateImpl::printString(int row, int col, const std::string& str, Color foreground, Color background)
+void ConsoleFramebufferPrivateImpl::setString(std::string text, Color color, Color backColor)
 {
-    int numCarToWrite = myMin(m_numRows - row, static_cast<int>(str.size()));
-    for (int idx = 0; idx < numCarToWrite; ++idx)
+    if (text.length() > m_numCols) {
+        text = text.substr(0, m_numCols); // cut if too long
+    }
+    m_toWrite.push_back(text);
+    m_colorToWrite.push_back(color);
+    m_backColorToWrite.push_back(backColor);
+}
+
+void ConsoleFramebufferPrivateImpl::setString(int row, int i)
+{
+    for (int idx = 0; idx < m_toWrite[i].size(); ++idx)
     {
-        setCharacter(row, col + idx, str[idx], foreground, background);
+        setCharacter(row, idx, m_toWrite[i][idx], m_colorToWrite[i], m_backColorToWrite[i]);
     }
 }
 
+void ConsoleFramebufferPrivateImpl::eraseEmtpyHistory()
+{
+    for (auto i = 0; i < m_orderHistory.size() - 1; ++i)
+    {
+        if (m_orderHistory[i] != "")
+            continue;
+        m_orderHistory.erase(
+            std::remove(m_orderHistory.begin(), m_orderHistory.end(), ""),
+            m_orderHistory.end()
+        );
 
+    }
+}
+
+void ConsoleFramebufferPrivateImpl::printText()
+{
+    int row = 0;
+    for (auto i = m_toWrite.size() - myMin((m_numRows - 1), m_toWrite.size()); i < m_toWrite.size(); ++i)
+    {
+        setString(row, i);
+        ++row;
+    }
+
+    for (int idx = 0; idx < m_orderHistory[m_idx].size(); ++idx)
+    {
+        setCharacter(row, idx, m_orderHistory[m_idx][idx], White, Black);
+    }
+}
 
 ConsoleFramebuffer::ConsoleFramebuffer() : m_pimpl(new ConsoleFramebufferPrivateImpl)
 {}
@@ -129,9 +263,9 @@ ConsoleFramebuffer::~ConsoleFramebuffer()
     m_pimpl = nullptr;
 }
 
-void ConsoleFramebuffer::setCharacter(int row, int col, char car, Color foreground, Color background)
+void ConsoleFramebuffer::setString(std::string text, Color color, Color backColor)
 {
-    m_pimpl->setCharacter(row, col, car, foreground, background);
+    m_pimpl->setString(text, color, backColor);
 }
 
 void ConsoleFramebuffer::show()
@@ -139,26 +273,17 @@ void ConsoleFramebuffer::show()
     m_pimpl->show();
 }
 
-void ConsoleFramebuffer::printString(int row, int col, const std::string& str, Color foreground, Color background)
+void ConsoleFramebuffer::updateConsoleSize()
 {
-    m_pimpl->printString(row, col, str, foreground, background);
+    m_pimpl->updateSize();
 }
 
-void ConsoleFramebuffer::clear() {
-    for (int row = 0; row < 25; ++row) { // For 25 lines
-        for (int col = 0; col < 80; ++col) { // For 80 columns
-            setCharacter(row, col, ' ', Color::White, Color::Black);
-        }
-    }
-    show();
+void ConsoleFramebuffer::processInputEvents()
+{
+    m_pimpl->processInputEvents();
 }
 
-void ConsoleFramebuffer::displayMenu(const std::vector<std::string>& options, int selectedIndex) {
-    clear();
-    for (size_t i = 0; i < options.size(); ++i) {
-        Color foreground = (i == selectedIndex) ? Color::White : Color::Green;
-        Color background = (i == selectedIndex) ? Color::Blue : Color::Black;
-        printString(i + 2, 2, options[i], foreground, background); // Display the options beginning at the second line
-    }
-    show();
+std::string ConsoleFramebuffer::getLastCommand()
+{
+    return m_pimpl->getLastCommand();
 }

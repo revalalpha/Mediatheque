@@ -17,7 +17,7 @@ int main(int argc, char** argv) {
     bool isRunning = true;
 
     while (isRunning) {
-        framebuffer.displayMenu(menuOptions, selectedIndex);
+        framebuffer.show();
 
         char key;
         std::cin >> key;
