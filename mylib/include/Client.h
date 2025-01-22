@@ -26,8 +26,14 @@ private:
 
 struct ClientHash {
     size_t operator()(const Client& client) const {
-        return std::hash<std::string>()(client.getName());
+        size_t hName  = std::hash<std::string>()(client.getName());
+        size_t hFName = std::hash<std::string>()(client.getFirstName());
+        size_t hAge   = std::hash<int>()(client.getAge());
+        size_t hMail  = std::hash<std::string>()(client.getMail());
+        // Combination of the hashes
+        return hName ^ (hFName << 1) ^ (hAge << 2) ^ (hMail << 3);
     }
 };
+
 
 #endif

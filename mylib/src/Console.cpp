@@ -147,6 +147,16 @@ WORD convertForegroundColorToWindows(Color foreground)
     case White:
         return FOREGROUND_RED + FOREGROUND_GREEN + FOREGROUND_BLUE;
 
+    case Cyan:
+        return FOREGROUND_BLUE | FOREGROUND_GREEN;
+
+    case Yellow:
+        return FOREGROUND_RED | FOREGROUND_GREEN;
+
+    case Magenta:
+        return FOREGROUND_RED | FOREGROUND_BLUE;
+
+
     case Black:
         return 0;
 
@@ -225,18 +235,11 @@ void ConsoleFramebufferPrivateImpl::setString(int row, int i)
     }
 }
 
-void ConsoleFramebufferPrivateImpl::eraseEmtpyHistory()
-{
-    for (auto i = 0; i < m_orderHistory.size() - 1; ++i)
-    {
-        if (m_orderHistory[i] != "")
-            continue;
-        m_orderHistory.erase(
-            std::remove(m_orderHistory.begin(), m_orderHistory.end(), ""),
-            m_orderHistory.end()
-        );
-
-    }
+void ConsoleFramebufferPrivateImpl::eraseEmtpyHistory() {
+    m_orderHistory.erase(
+        std::remove_if(m_orderHistory.begin(), m_orderHistory.end(),
+            [](const std::string& str) { return str.empty(); }),
+        m_orderHistory.end());
 }
 
 void ConsoleFramebufferPrivateImpl::printText()

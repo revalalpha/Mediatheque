@@ -33,13 +33,16 @@ public:
 
     std::string showMediaBorrowedByClient(const std::string& clientName) const;
 
+    void addClient(const Client& client);
+
 private:
     std::shared_ptr<Media> findMedia(const std::string& mediaType, const std::string& title) const;
 
     Client getClient(const std::string& clientName) const;
 
     std::vector<std::shared_ptr<Media>> mediaCollection; 
-    std::unordered_map<Client, std::vector<std::shared_ptr<Media>>, ClientHash> clientMediaMap; 
+    std::unordered_map<Client, std::vector<std::shared_ptr<Media>>, ClientHash> clientMediaMap;
+    std::vector<Client> clients;
 };
 
 #endif // LIBRARY_SYSTEM_H

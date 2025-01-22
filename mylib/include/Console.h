@@ -12,6 +12,9 @@ enum Color
     , Blue
     , White
     , Black
+    , Yellow
+    , Cyan
+    , Magenta
 };
 
 class ConsoleFramebufferPrivateImpl;

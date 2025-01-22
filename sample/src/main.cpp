@@ -1,43 +1,49 @@
 #include "Console.h"
 #include <iostream>
 #include <vector>
+#include <thread>
+#include <chrono>
 
-int main(int argc, char** argv) {
-    ConsoleFramebuffer framebuffer;
+int main(int argc, char** argv) 
+{
+    try 
+    {
+        ConsoleFramebuffer console;
 
-    std::vector<std::string> menuOptions = {
-        "1. Add a client",
-        "2. Delete a client",
-        "3. List all clients",
-        "4. Add a media",
-        "5. Leave"
-    };
+        console.updateConsoleSize();
 
-    int selectedIndex = 0;
-    bool isRunning = true;
+        console.setString("Welcome to the interactive console of the mediatheque !", White, Black);
+        console.show();
 
-    while (isRunning) {
-        framebuffer.show();
+        bool running = true;
+        while (running) 
+        {
+            console.processInputEvents();
+            std::string command = console.getLastCommand();
 
-        char key;
-        std::cin >> key;
-        switch (key) {
-        case 'w': 
-            selectedIndex = (selectedIndex > 0) ? selectedIndex - 1 : menuOptions.size() - 1;
-            break;
-        case 's': 
-            selectedIndex = (selectedIndex < menuOptions.size() - 1) ? selectedIndex + 1 : 0;
-            break;
-        case '\n': 
-            if (selectedIndex == menuOptions.size() - 1) { 
-                isRunning = false;
+            if (!command.empty()) 
+            {
+                if (command == "exit") 
+                {
+                    console.setString("By !", Green, Black);
+                    console.show();
+                    std::this_thread::sleep_for(std::chrono::seconds(2));
+                    running = false;
+                }
+                else 
+                    console.setString("Received command : " + command, White, Black);
+                console.show();
             }
-            std::cout << "Selected option : " << menuOptions[selectedIndex] << "\n";
-            break;
-        default:
-            break;
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
     }
+    catch (const std::exception& e)
+    {
+        std::cerr << "Error: " << e.what() << std::endl;
+        return EXIT_FAILURE;
+    }
 
-    return 0;
+    return EXIT_SUCCESS;
+    
 }
+
