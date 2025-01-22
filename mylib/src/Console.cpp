@@ -1,6 +1,8 @@
 #include "Console.h"
+
 #include <Windows.h>
 #include <vector>
+#include <algorithm>
 #include <iostream>
 
 class ConsoleFramebufferPrivateImpl
@@ -12,6 +14,9 @@ public:
     void updateSize();
     void processInputEvents();
     std::string getLastCommand();
+    void waitForEnter();
+    std::string readLine(const std::string& prompt = "");
+    int readInt(const std::string& prompt);
 private:
     void setCharacter(int row, int col, char car, Color foreground, Color background);
     void copyStringToEnd(std::string string);
@@ -176,15 +181,19 @@ WORD convertColorToWindows(Color foreground, Color background)
     return convertForegroundColorToWindows(foreground) + convertBackgroundColorToWindows(background);
 }
 
-void ConsoleFramebufferPrivateImpl::setCharacter(int row, int col, char car, Color foreground, Color background)
-{
+void ConsoleFramebufferPrivateImpl::setCharacter(int row, int col, char car, Color foreground, Color background) {
+    if (row < 0 || row >= m_numRows || col < 0 || col >= m_numCols) {
+        return;
+    }
     CHAR_INFO& cell = m_buffer[row * m_numCols + col];
     cell.Char.AsciiChar = car;
     cell.Attributes = convertColorToWindows(foreground, background);
 }
 
+
 void ConsoleFramebufferPrivateImpl::show()
 {
+    updateSize();
     printText();
     COORD dwBufferSize;
     dwBufferSize.X = m_numCols;
@@ -257,6 +266,35 @@ void ConsoleFramebufferPrivateImpl::printText()
     }
 }
 
+void ConsoleFramebufferPrivateImpl::waitForEnter() {
+    std::cin.get();  // Wait for ENTER
+}
+
+std::string ConsoleFramebufferPrivateImpl::readLine(const std::string& prompt) {
+    setString(prompt, White, Black);
+    std::string input;
+    if (std::cin.peek() == '\n') {  // find if '\n' stay in the buffer
+        std::cin.get();  
+    }
+    std::getline(std::cin, input);
+    return input;
+}
+
+int ConsoleFramebufferPrivateImpl::readInt(const std::string& prompt) {
+    setString(prompt, White, Black);
+    int input;
+    while (true) {
+        if (std::cin >> input) {
+            return input;
+        }
+        else {
+            setString("Invalid. Please enter a number : ", Red, Black);
+            std::cin.clear();
+            while (std::cin.get() != '\n');
+        }
+    }
+}
+
 ConsoleFramebuffer::ConsoleFramebuffer() : m_pimpl(new ConsoleFramebufferPrivateImpl)
 {}
 
@@ -289,4 +327,19 @@ void ConsoleFramebuffer::processInputEvents()
 std::string ConsoleFramebuffer::getLastCommand()
 {
     return m_pimpl->getLastCommand();
+}
+
+int ConsoleFramebuffer::readInt(const std::string& prompt)
+{
+    return m_pimpl->readInt(prompt);
+}
+
+void ConsoleFramebuffer::waitForEnter()
+{
+    m_pimpl->waitForEnter();
+}
+
+std::string ConsoleFramebuffer::readLine(const std::string& prompt)
+{
+    return m_pimpl->readLine(prompt);
 }

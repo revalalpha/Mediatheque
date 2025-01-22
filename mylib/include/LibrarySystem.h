@@ -8,6 +8,7 @@
 #include "Client.h"
 
 #include <memory>
+#include <iostream>
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -33,7 +34,11 @@ public:
 
     std::string showMediaBorrowedByClient(const std::string& clientName) const;
 
-    void addClient(const Client& client);
+    void addClient(const std::string& name, int age);
+
+    void removeClient(const std::string& name, int age);
+
+    std::string listClients() const;
 
 private:
     std::shared_ptr<Media> findMedia(const std::string& mediaType, const std::string& title) const;

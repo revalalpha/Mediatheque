@@ -29,6 +29,9 @@ public:
     void updateConsoleSize();
     void processInputEvents();
     std::string getLastCommand();
+    void waitForEnter();
+    std::string readLine(const std::string& prompt = "");
+    int readInt(const std::string& prompt);
 
 private:
     ConsoleFramebufferPrivateImpl* m_pimpl;

@@ -11,20 +11,24 @@ void LibrarySystem::addMedia(const std::string& mediaType, const std::vector<std
         if (args.size() != 2) {
             throw std::invalid_argument("Usage: addMedia book <title> <isbn>");
         }
-        media = std::make_shared<Book>(args);
+        media = std::make_shared<Book>(args[0], args[1]);
     }
     else if (mediaType == "film") {
         if (args.size() != 3) {
             throw std::invalid_argument("Usage: addMedia film <title> <format> <ageLimit>");
         }
-        media = std::make_shared<Film>(args);
+        int ageLimit = std::stoi(args[2]);
+        media = std::make_shared<Film>(args[0], args[1], ageLimit);
     }
     else if (mediaType == "game") {
         if (args.size() != 4) {
-            throw std::invalid_argument("Usage: addMedia game <title> <studio> <pegi> <genre>");
+            throw std::invalid_argument("Usage: addMedia game <title> <studio> <genre> <pegi>");
         }
-        media = std::make_shared<Game>(args);
+        int pegi = std::stoi(args[3]);
+
+        media = std::make_shared<Game>(args[0], args[1], args[2], pegi);
     }
+
     else {
         throw std::invalid_argument("Unsupported media type: " + mediaType);
     }
@@ -166,7 +170,16 @@ Client LibrarySystem::getClient(const std::string& clientName) const {
 }
 
 void LibrarySystem::addClient(const std::string& name, int age) {
-    clients.push_back(Client(name, "", age, "", "", ""));
+    auto it = std::find_if(clients.begin(), clients.end(),
+        [&name, age](const Client& client) {
+            return client.getName() == name && client.getAge() == age;
+        });
+
+    if (it != clients.end()) {
+        throw std::runtime_error("Client is already registred.");
+    }
+
+    clients.emplace_back(name, "", age, "", "", "");
 }
 
 void LibrarySystem::removeClient(const std::string& name, int age) {
@@ -175,14 +188,23 @@ void LibrarySystem::removeClient(const std::string& name, int age) {
             return client.getName() == name && client.getAge() == age;
         });
 
-    if (it != clients.end()) {
-        clients.erase(it);
-        Client clientToRemove = *it;
-        clientMediaMap.erase(clientToRemove);
+    if (it == clients.end()) {
+        throw std::runtime_error("Client not found.");
+    }
 
-        std::cout << "Client " << name << " (Age: " << age << ") successfully deleted." << std::endl;
+    clientMediaMap.erase(*it);
+    clients.erase(it);
+}
+
+
+std::string LibrarySystem::listClients() const {
+    if (clients.empty()) {
+        return "No client registered.\n";
     }
-    else {
-        throw std::runtime_error("Client non trouvé.");
+
+    std::ostringstream oss;
+    for (const auto& client : clients) {
+        oss << "Name : " << client.getName() << ", Age : " << client.getAge() << "\n";
     }
+    return oss.str();
 }
