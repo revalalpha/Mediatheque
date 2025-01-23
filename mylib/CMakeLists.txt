@@ -11,6 +11,7 @@ set(HEADERS
     ${HEADER_DIR}/Film.h
     ${HEADER_DIR}/Book.h
     ${HEADER_DIR}/Game.h
+    ${HEADER_DIR}/RunningConsole.h
 )
 
 set(SOURCES
@@ -21,6 +22,7 @@ set(SOURCES
     ${SOURCE_DIR}/Film.cpp
     ${SOURCE_DIR}/Book.cpp
     ${SOURCE_DIR}/Game.cpp
+    ${SOURCE_DIR}/RunningConsole.cpp
 )
 
 add_library(${PROJECT_NAME}
