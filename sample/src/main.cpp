@@ -221,7 +221,7 @@ int main(int argc, char** argv) {
             getline(cin, name);
             getline(cin, firstname);
             cin >> age;
-            cin.ignore();  // Pour ignorer la nouvelle ligne après l'âge
+            cin.ignore();
             getline(cin, address);
             getline(cin, phoneNumber);
             getline(cin, mail);
@@ -259,7 +259,7 @@ int main(int argc, char** argv) {
                 cout << "Enter book details (title, ISBN):\n";
                 getline(cin, title);
                 getline(cin, ISBN);
-                librarySystem.addMedia("book", title, ISBN);
+                librarySystem.addBookMedia("book", title, ISBN);
             }
             else if (mediaType == "film") {
                 string title, support, ageLimit;
@@ -267,7 +267,7 @@ int main(int argc, char** argv) {
                 getline(cin, title);
                 getline(cin, support);
                 getline(cin, ageLimit);
-                librarySystem.addMedia("film", title, support, ageLimit);
+                librarySystem.addFilmMedia("film", title, support, ageLimit);
             }
             else if (mediaType == "game") {
                 string title, studio, PEGI, genre;
@@ -276,7 +276,7 @@ int main(int argc, char** argv) {
                 getline(cin, studio);
                 getline(cin, PEGI);
                 getline(cin, genre);
-                librarySystem.addMedia("game", title, studio, PEGI, genre);
+                librarySystem.addGameMedia("game", title, studio, PEGI, genre);
             }
             cout << "Media added successfully.\n";
         }

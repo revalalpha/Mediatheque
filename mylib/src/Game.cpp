@@ -2,7 +2,7 @@
 #include <sstream>
 
 Game::Game(const std::string& title, const std::string& studio, const std::string& genre, int pegi)
-    : Media(title), studio(studio), genre(genre), pegi(pegi) {}
+    : Media(title, MediaState::Available), studio(studio), genre(genre), pegi(pegi) {}
 
 std::string Game::getType() const {
     return "Game";

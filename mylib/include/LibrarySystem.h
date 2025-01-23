@@ -41,9 +41,16 @@ public:
 
     void removeClientByNameAndFirstName(const std::string& name, const std::string& firstName);
 
+
     void  removeClientByMail(const std::string& mail);
 
     std::string listClients() const;
+
+
+    void addBookMedia(const std::string& mediaType, const std::string& title, const std::string& ISBN);
+    void addFilmMedia(const std::string& mediaType, const std::string& title, const std::string& support, const std::string& ageLimit);
+    void addGameMedia(const std::string& mediaType, const std::string& title, const std::string& studio, const std::string& PEGI,
+        const std::string& genre);
 
 private:
     std::shared_ptr<Media> findMedia(const std::string& mediaType, const std::string& title) const;

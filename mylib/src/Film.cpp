@@ -2,7 +2,7 @@
 #include <sstream>
 
 Film::Film(const std::string& title, const std::string& format, int ageLimit)
-    : Media(title), format(format), ageLimit(ageLimit) {}
+    : Media(title, MediaState::Available), format(format), ageLimit(ageLimit) {}
 
 std::string Film::getType() const {
     return "Film";

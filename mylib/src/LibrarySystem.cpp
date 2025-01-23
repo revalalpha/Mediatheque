@@ -36,6 +36,22 @@ void LibrarySystem::addMedia(const std::string& mediaType, const std::vector<std
     mediaCollection.push_back(media);
 }
 
+void LibrarySystem::addBookMedia(const std::string& mediaType, const std::string& title, const std::string& ISBN)
+{
+
+}
+
+void LibrarySystem::addFilmMedia(const std::string& mediaType, const std::string& title, const std::string& support, const std::string& ageLimit)
+{
+
+}
+
+void LibrarySystem::addGameMedia(const std::string& mediaType, const std::string& title, const std::string& studio, const std::string& PEGI,
+    const std::string& genre)
+{
+
+}
+
 void LibrarySystem::removeMedia(const std::string& mediaType, const std::string& title) {
     auto it = std::remove_if(mediaCollection.begin(), mediaCollection.end(),
         [&mediaType, &title](const std::shared_ptr<Media>& media) {
@@ -238,6 +254,7 @@ void LibrarySystem::addClient(const std::string& name, const std::string& firstn
     if (it != clients.end()) {
         throw std::runtime_error("Client is already registered.");
     }
+
 
     clients.emplace_back(name, firstname, age, address, phoneNumber, mail);
 }

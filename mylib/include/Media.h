@@ -10,8 +10,7 @@ enum class MediaState {
 
 class Media {
 public:
-    Media(const std::string& title, MediaState state)
-        : title(title), state(state) {}
+    Media(const std::string& title, MediaState state);
     virtual ~Media() = default;
 
     virtual std::string getType() const = 0;
