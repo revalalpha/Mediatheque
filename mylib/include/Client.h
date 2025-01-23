@@ -6,13 +6,17 @@
 
 class Client {
 public:
-    Client(const std::string& name, const std::string& firstName, int age, const std::string& address, const std::string& phoneNumber, const std::string& mail);
+    Client(const std::string& name, const std::string& firstName, int age, const std::string& address,
+        const std::string& phoneNumber, const std::string& mail);
 
     // GETTERS
     std::string getName() const;
     std::string getFirstName() const;
     std::string getMail() const;
     int getAge() const;
+    const std::string& getAddress() const;
+    const std::string& getPhoneNumber() const;
+
     bool operator==(const Client& other) const;
 
 private:
@@ -34,6 +38,5 @@ struct ClientHash {
         return hName ^ (hFName << 1) ^ (hAge << 2) ^ (hMail << 3);
     }
 };
-
 
 #endif

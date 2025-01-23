@@ -1,7 +1,8 @@
 #include "Media.h"
 #include <stdexcept>
 
-Media::Media(const std::string& title) : title(title), isBorrowed(false) {}
+Media::Media(const std::string& title, MediaState state)
+    : title(title), state(state) {}
 
 const std::string& Media::getTitle() const {
     return title;
@@ -23,4 +24,8 @@ void Media::returnMedia() {
         throw std::runtime_error("The media is not currently borrowed.");
     }
     isBorrowed = false;
+}
+
+MediaState Media::getState() const {
+    return state;
 }

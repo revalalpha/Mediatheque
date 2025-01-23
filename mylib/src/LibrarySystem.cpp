@@ -64,24 +64,42 @@ std::string LibrarySystem::listMedia() const {
 }
 
 //std::string LibrarySystem::listMediaByState(bool isBorrowed) const {
-//    std::ostringstream oss;
+//    std::string result;
 //    for (const auto& media : mediaCollection) {
 //        if (media->getBorrowedStatus() == isBorrowed) {
-//            oss << media->getInfo() << "\n";
+//            result += media->getTitle() + "\n";
 //        }
 //    }
-//    return oss.str();
+//    return result;
 //}
 
-std::string LibrarySystem::listMediaByState(bool isBorrowed) const {
+std::string LibrarySystem::listMediaByState(const std::string& state) const {
     std::string result;
-    for (const auto& media : mediaCollection) {
-        if (media->getBorrowedStatus() == isBorrowed) {
-            result += media->getTitle() + "\n";
+    MediaState desiredState;
+
+    if (state == "available") {
+        desiredState = MediaState::Available;
+    }
+    else if (state == "borrowed") {
+        desiredState = MediaState::Borrowed;
+    }
+    else {
+        return "Invalid state. Please use 'available' or 'borrowed'.";
+    }
+
+    for (const auto& mediaPtr : mediaCollection) {
+        if (mediaPtr->getState() == desiredState) {
+            result += mediaPtr->getTitle() + "\n";
         }
     }
+
+    if (result.empty()) {
+        result = "No media found in the requested state.";
+    }
+
     return result;
 }
+
 
 std::string LibrarySystem::getMediaState(const std::string& mediaType, const std::string& title) const {
     for (const auto& media : mediaCollection) {
@@ -139,15 +157,55 @@ void LibrarySystem::returnMedia(const std::string& mediaType, const std::string&
     throw std::runtime_error("Media not borrowed: " + title);
 }
 
-std::string LibrarySystem::showMediaBorrowedByClient(const std::string& clientName) const {
-    Client client = getClient(clientName);
+std::string LibrarySystem::showMediaBorrowedByClientWithNameAndFirstName(const std::string& clientName, const std::string& clientFirstName) const {
+    auto it = std::find_if(clients.begin(), clients.end(),
+        [&clientName, &clientFirstName](const Client& client) {
+            return client.getName() == clientName && client.getFirstName() == clientFirstName;
+        });
+
+    if (it == clients.end()) {
+        return "Client not found.";
+    }
+
+    const Client& client = *it;
     std::string result;
-    auto it = clientMediaMap.find(client);
-    if (it != clientMediaMap.end()) {
-        for (const auto& media : it->second) {
+
+    auto mediaIt = clientMediaMap.find(client);
+    if (mediaIt != clientMediaMap.end()) {
+        for (const auto& media : mediaIt->second) {
             result += media->getTitle() + "\n";
         }
     }
+    else {
+        result = "No media borrowed by this client.";
+    }
+
+    return result;
+}
+
+std::string LibrarySystem::showMediaBorrowedByClientWithMail(const std::string& mail) const {
+    auto it = std::find_if(clients.begin(), clients.end(),
+        [&mail](const Client& client) {
+            return client.getMail() == mail;
+        });
+
+    if (it == clients.end()) {
+        return "Client not found.";
+    }
+
+    const Client& client = *it;
+    std::string result;
+
+    auto mediaIt = clientMediaMap.find(client);
+    if (mediaIt != clientMediaMap.end()) {
+        for (const auto& media : mediaIt->second) {
+            result += media->getTitle() + "\n";
+        }
+    }
+    else {
+        result = "No media borrowed by this client.";
+    }
+
     return result;
 }
 
@@ -169,23 +227,26 @@ Client LibrarySystem::getClient(const std::string& clientName) const {
     throw std::runtime_error("Client not found.");
 }
 
-void LibrarySystem::addClient(const std::string& name, int age) {
+void LibrarySystem::addClient(const std::string& name, const std::string& firstname, int age, const std::string& address
+    , const std::string& phoneNumber, const std::string& mail) {
     auto it = std::find_if(clients.begin(), clients.end(),
-        [&name, age](const Client& client) {
-            return client.getName() == name && client.getAge() == age;
+        [&name, &firstname, age, &address, &phoneNumber, &mail](const Client& client) {
+            return client.getName() == name && client.getFirstName() == firstname && client.getAge() == age
+                && client.getAddress() == address && client.getPhoneNumber() == phoneNumber && client.getMail() == mail;
         });
 
     if (it != clients.end()) {
-        throw std::runtime_error("Client is already registred.");
+        throw std::runtime_error("Client is already registered.");
     }
 
-    clients.emplace_back(name, "", age, "", "", "");
+    clients.emplace_back(name, firstname, age, address, phoneNumber, mail);
 }
 
-void LibrarySystem::removeClient(const std::string& name, int age) {
+
+void LibrarySystem::removeClientByNameAndFirstName(const std::string& name, const std::string& firstName) {
     auto it = std::find_if(clients.begin(), clients.end(),
-        [&name, age](const Client& client) {
-            return client.getName() == name && client.getAge() == age;
+        [&name, &firstName](const Client& client) {
+            return client.getName() == name && client.getFirstName() == firstName;
         });
 
     if (it == clients.end()) {
@@ -196,6 +257,20 @@ void LibrarySystem::removeClient(const std::string& name, int age) {
     clients.erase(it);
 }
 
+void  LibrarySystem::removeClientByMail(const std::string& mail)
+{
+    auto it = std::find_if(clients.begin(), clients.end(),
+        [&mail](const Client& client) {
+            return client.getMail() == mail;
+        });
+
+    if (it == clients.end()) {
+        throw std::runtime_error("Client not found.");
+    }
+
+    clientMediaMap.erase(*it);
+    clients.erase(it);
+}
 
 std::string LibrarySystem::listClients() const {
     if (clients.empty()) {

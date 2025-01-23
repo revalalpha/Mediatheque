@@ -3,9 +3,15 @@
 
 #include <string>
 
+enum class MediaState {
+    Available,
+    Borrowed
+};
+
 class Media {
 public:
-    Media(const std::string& title);
+    Media(const std::string& title, MediaState state)
+        : title(title), state(state) {}
     virtual ~Media() = default;
 
     virtual std::string getType() const = 0;
@@ -13,11 +19,13 @@ public:
     bool getBorrowedStatus() const;
     void borrow();
     void returnMedia();
+    MediaState getState() const;
 
     virtual std::string getInfo() const = 0;
 
 protected:
     std::string title;
+    MediaState state;
     bool isBorrowed;
 
 };

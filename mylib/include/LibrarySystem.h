@@ -22,7 +22,7 @@ public:
 
     std::string listMedia() const;
 
-    std::string listMediaByState(bool isBorrowed) const;
+    std::string listMediaByState(const std::string& state) const;
 
     std::string getMediaState(const std::string& mediaType, const std::string& title) const;
 
@@ -32,11 +32,16 @@ public:
 
     void returnMedia(const std::string& mediaType, const std::string& title);
 
-    std::string showMediaBorrowedByClient(const std::string& clientName) const;
+    std::string showMediaBorrowedByClientWithNameAndFirstName(const std::string& clientName, const std::string& ClientFirstName) const;
 
-    void addClient(const std::string& name, int age);
+    std::string showMediaBorrowedByClientWithMail(const std::string& mail) const;
 
-    void removeClient(const std::string& name, int age);
+    void addClient(const std::string& name, const std::string& firstname, int age, const std::string& address
+        , const std::string& phoneNumber, const std::string& mail);
+
+    void removeClientByNameAndFirstName(const std::string& name, const std::string& firstName);
+
+    void  removeClientByMail(const std::string& mail);
 
     std::string listClients() const;
 

@@ -11,23 +11,38 @@ Client::Client(const std::string& name, const std::string& firstName, int age, c
 }
 
 // GETTERS
-std::string Client::getName() const {
+std::string Client::getName() const 
+{
     return name;
 }
 
-std::string Client::getFirstName() const {
+std::string Client::getFirstName() const 
+{
     return firstName;
 }
 
-std::string Client::getMail() const {
+std::string Client::getMail() const 
+{
     return mail;
 }
 
-int Client::getAge() const {
+int Client::getAge() const 
+{
     return age;
 }
 
-bool Client::operator==(const Client& other) const {
+const std::string& Client::getAddress() const 
+{
+    return address; 
+}
+
+const std::string& Client::getPhoneNumber() const 
+{ 
+    return phoneNumber; 
+}
+
+bool Client::operator==(const Client& other) const
+{
     return name == other.name && firstName == other.firstName && age == other.age
         && address == other.address && phoneNumber == other.phoneNumber && mail == other.mail;
 }
