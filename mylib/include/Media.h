@@ -25,7 +25,7 @@ public:
 protected:
     std::string title;
     MediaState state;
-    bool isBorrowed;
+    bool isBorrowed = false;
 
 };
 

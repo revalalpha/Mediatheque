@@ -2,7 +2,9 @@
 #include <stdexcept>
 
 Media::Media(const std::string& title, MediaState state)
-    : title(title), state(state) {}
+    : title(title), state(state)
+{
+}
 
 const std::string& Media::getTitle() const {
     return title;

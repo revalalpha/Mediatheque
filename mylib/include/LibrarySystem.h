@@ -48,7 +48,7 @@ public:
 
 
     void addBookMedia(const std::string& mediaType, const std::string& title, const std::string& ISBN);
-    void addFilmMedia(const std::string& mediaType, const std::string& title, const std::string& support, const std::string& ageLimit);
+    void addFilmMedia(const std::string& mediaType, const std::string& title, const std::string& support, const int& ageLimit);
     void addGameMedia(const std::string& mediaType, const std::string& title, const std::string& studio, const std::string& PEGI,
         const std::string& genre);
 

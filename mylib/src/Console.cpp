@@ -352,8 +352,10 @@ class ConsoleFramebufferPrivateImpl
 public:
     ConsoleFramebufferPrivateImpl();
     void show();
+    void display(const std::string& message);
+    std::string readLine();
     void setString(std::string text, Color color = White, Color backColor = Black);
-    void updateSze();
+    void updateSize();
     void writeConsol();
     void parseCommand(const std::string& command, std::string& action, std::vector<std::string>& args);
     std::string getLastCommand();
@@ -382,7 +384,12 @@ private:
     std::vector <Color> m_backColorToWrite;
 };
 
-void ConsoleFramebufferPrivateImpl::updateSze()
+void ConsoleFramebufferPrivateImpl::display(const std::string& message)
+{
+    std::cout << message << std::endl;
+}
+
+void ConsoleFramebufferPrivateImpl::updateSize()
 {
     CONSOLE_SCREEN_BUFFER_INFO sbi;
     BOOL result = GetConsoleScreenBufferInfo(m_handleoutput, &sbi);
@@ -392,6 +399,8 @@ void ConsoleFramebufferPrivateImpl::updateSze()
     //remove empty commands
     eraseEmtpyHistorique();
 }
+
+
 
 void ConsoleFramebufferPrivateImpl::writeConsol()
 {
@@ -477,7 +486,7 @@ ConsoleFramebufferPrivateImpl::ConsoleFramebufferPrivateImpl() :m_handleoutput(G
     //prepare the first command
     m_historique.reserve(1);
     m_historique.resize(1);
-    updateSze();
+    updateSize();
 }
 
 
@@ -604,6 +613,12 @@ void ConsoleFramebufferPrivateImpl::printText()
     }
 }
 
+std::string ConsoleFramebufferPrivateImpl::readLine() {
+    std::string input;
+    std::getline(std::cin, input);
+    return input;
+}
+
 ConsoleFramebuffer::ConsoleFramebuffer() :m_impl(new ConsoleFramebufferPrivateImpl)
 {}
 
@@ -625,7 +640,7 @@ void ConsoleFramebuffer::show()
 
 void ConsoleFramebuffer::updateSize()
 {
-    m_impl->updateSze();
+    m_impl->updateSize();
 }
 
 void ConsoleFramebuffer::writeConsol()
@@ -641,4 +656,14 @@ void ConsoleFramebuffer::parseCommand(const std::string& command, std::string& a
 std::string ConsoleFramebuffer::getLastCommand()
 {
     return m_impl->getLastCommand();
+}
+
+void ConsoleFramebuffer::display(const std::string& message)
+{
+    m_impl->display(message);
+}
+
+std::string ConsoleFramebuffer::readLine()
+{
+    return m_impl->readLine();
 }

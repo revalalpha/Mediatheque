@@ -41,7 +41,7 @@ void LibrarySystem::addBookMedia(const std::string& mediaType, const std::string
 
 }
 
-void LibrarySystem::addFilmMedia(const std::string& mediaType, const std::string& title, const std::string& support, const std::string& ageLimit)
+void LibrarySystem::addFilmMedia(const std::string& mediaType, const std::string& title, const std::string& support, const int& ageLimit)
 {
 
 }
