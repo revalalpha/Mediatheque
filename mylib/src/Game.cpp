@@ -1,8 +1,7 @@
 #include "Game.h"
-#include <sstream>
 
 Game::Game(const std::string& title, const std::string& studio, const std::string& genre, int pegi)
-    : Media(title, MediaState::Available), studio(studio), genre(genre), pegi(pegi) {}
+    : Media(title, MediaState::Available), m_studio(studio), m_genre(genre), m_pegi(pegi) {}
 
 std::string Game::getType() const {
     return "Game";
@@ -10,12 +9,15 @@ std::string Game::getType() const {
 
 std::string Game::getInfo() const {
     std::ostringstream oss;
-    oss << "Type: Game, Title: " << title << ", Studio: " << studio
-        << ", Genre: " << genre << ", PEGI: " << pegi
-        << ", Borrowed: " << (isBorrowed ? "Yes" : "No");
+    oss << "\nType: Game"
+        << "\nTitle: " << m_title
+        << "\nStudio : " << m_studio
+        << "\nGenre: " << m_genre << ", PEGI: " << m_pegi
+        << "\nBorrowed: " << (m_isBorrowed ? "Yes" : "No")
+        << "\n";
     return oss.str();
 }
 
 int Game::getPegi() const {
-    return pegi;
+    return m_pegi;
 }

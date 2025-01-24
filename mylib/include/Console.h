@@ -2,8 +2,10 @@
 #define CONSOLE_H
 
 #include <vector>
-#include <iostream>
 #include <string>
+#include <iostream>
+#include <Windows.h>
+#include <sstream>
 
 enum Color
 {

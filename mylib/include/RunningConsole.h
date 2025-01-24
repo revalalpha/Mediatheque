@@ -1,7 +1,7 @@
 #include "LibrarySystem.h"
 #include "Console.h"
-#include "LibrarySystem.h"
-#include "Console.h"
+#include <stdexcept>
+#include <sstream>
 
 class Database {
 public:

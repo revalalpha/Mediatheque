@@ -2,17 +2,19 @@
 #define LIBRARYSYSTEM_H
 
 #include "Media.h"
+#include "Client.h"
 #include "Book.h"
 #include "Film.h"
 #include "Game.h"
-#include "Client.h"
 
+#include <algorithm>
+#include <sstream>
 #include <memory>
 #include <iostream>
-#include <string>
 #include <vector>
 #include <unordered_map>
 #include <stdexcept>
+#include <regex>
 
 class LibrarySystem {
 public:
@@ -47,6 +49,11 @@ public:
 
     std::string listClients() const;
 
+    bool isValidPhoneNumber(const std::string& phoneNumber);
+
+    bool isValidEmail(const std::string& email);
+
+    std::string generateUniqueKey(const std::string& type, const std::string& title);
 
     void addBookMedia(const std::string& title, const std::string& ISBN);
     void addFilmMedia(const std::string& title, const std::string& support, int ageLimit);

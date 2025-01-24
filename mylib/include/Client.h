@@ -3,6 +3,7 @@
 
 #include <string>
 #include <functional>
+#include <stdexcept>
 
 class Client {
 public:
@@ -20,12 +21,12 @@ public:
     bool operator==(const Client& other) const;
 
 private:
-    std::string name ;
-    std::string firstName;
-    int age;
-    std::string address;
-    std::string phoneNumber;
-    std::string mail;
+    std::string m_name ;
+    std::string m_firstName;
+    int m_age;
+    std::string m_address;
+    std::string m_phoneNumber;
+    std::string m_mail;
 };
 
 struct ClientHash {

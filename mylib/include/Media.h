@@ -1,7 +1,7 @@
 #ifndef MEDIA_H
 #define MEDIA_H
 
-#include <string>
+#include <stdexcept>
 
 enum class MediaState {
     Available,
@@ -23,9 +23,9 @@ public:
     virtual std::string getInfo() const = 0;
 
 protected:
-    std::string title;
-    MediaState state;
-    bool isBorrowed = false;
+    std::string m_title;
+    MediaState m_state;
+    bool m_isBorrowed = false;
 
 };
 

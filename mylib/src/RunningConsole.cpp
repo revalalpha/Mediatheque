@@ -1,6 +1,4 @@
 #include "RunningConsole.h"
-#include <stdexcept>
-#include <sstream>
 
 Database::Database()
     : m_console(new ConsoleFramebuffer()),
@@ -103,26 +101,51 @@ void Database::Exe() {
                 m_console->displayLine("Client removed successfully.\n", Green);
             }
             else if (command == "addMedia") {
-                std::string type, title, ISBN, support, studio, genre;
-                int ageLimit = 0, PEGI = 0;
-
+                std::string type, title;
                 stream >> type >> title;
 
+                if (type.empty() || title.empty()) {
+                    m_console->displayLine("Error: Media type and title are required.\n", Red);
+                    continue;
+                }
+
                 if (type == "book") {
+                    std::string ISBN;
                     stream >> ISBN;
+                    if (ISBN.empty()) {
+                        m_console->display("Error: ISBN is required for books.\n", Red);
+                        continue;
+                    }
                     m_library->addBookMedia(title, ISBN);
                 }
                 else if (type == "film") {
+                    std::string support;
+                    int ageLimit = 0;
                     stream >> support >> ageLimit;
+                    if (support.empty() || ageLimit <= 0) {
+                        m_console->displayLine("Error: Support and age limit are required for films.\n", Red);
+                        continue;
+                    }
                     m_library->addFilmMedia(title, support, ageLimit);
                 }
                 else if (type == "game") {
+                    std::string studio, genre;
+                    int PEGI = 0;
                     stream >> studio >> genre >> PEGI;
+                    if (studio.empty() || genre.empty() || PEGI <= 0) {
+                        m_console->displayLine("Error: Studio, genre, and PEGI rating are required for games.\n", Red);
+                        continue;
+                    }
                     m_library->addGameMedia(title, studio, genre, PEGI);
+                }
+                else {
+                    m_console->displayLine("Error: Unsupported media type.\n", Red);
+                    continue;
                 }
 
                 m_console->displayLine("Media added successfully.\n", Green);
             }
+
             else if (command == "listMedia") {
                 std::string state;
                 if (stream >> state) {

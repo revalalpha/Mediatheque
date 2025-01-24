@@ -2,6 +2,7 @@
 #define GAME_H
 
 #include "Media.h"
+#include <sstream>
 
 class Game : public Media {
 public:
@@ -11,9 +12,9 @@ public:
     int getPegi() const;
 
 private:
-    std::string studio;
-    std::string genre;
-    int pegi;
+    std::string m_studio;
+    std::string m_genre;
+    int m_pegi;
 };
 
 #endif

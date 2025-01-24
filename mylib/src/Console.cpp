@@ -1,6 +1,5 @@
 #include "Console.h"
-#include <Windows.h>
-#include <sstream>
+
 class ConsoleFramebufferPrivateImpl
 {
 public:

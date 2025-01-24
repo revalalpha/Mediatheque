@@ -1,9 +1,5 @@
 #include "LibrarySystem.h"
 
-#include <algorithm>
-#include <sstream>
-#include <stdexcept>
-
 void LibrarySystem::addMedia(const std::string& mediaType, const std::vector<std::string>& args) {
     std::shared_ptr<Media> media;
 
@@ -11,6 +7,16 @@ void LibrarySystem::addMedia(const std::string& mediaType, const std::vector<std
         if (args.size() != 2) {
             throw std::invalid_argument("Usage: addMedia book <title> <isbn>");
         }
+
+        for (const auto& existingMedia : mediaCollection) {
+            if (existingMedia->getType() == "book") {
+                auto existingBook = std::dynamic_pointer_cast<Book>(existingMedia);
+                if (existingBook && existingBook->getISBN() == args[1]) {
+                    throw std::runtime_error("Book with the same ISBN already exists: " + args[1]);
+                }
+            }
+        }
+
         media = std::make_shared<Book>(args[0], args[1]);
     }
     else if (mediaType == "film") {
@@ -18,6 +24,13 @@ void LibrarySystem::addMedia(const std::string& mediaType, const std::vector<std
             throw std::invalid_argument("Usage: addMedia film <title> <format> <ageLimit>");
         }
         int ageLimit = std::stoi(args[2]);
+
+        for (const auto& existingMedia : mediaCollection) {
+            if (existingMedia->getType() == "film" && existingMedia->getTitle() == args[0]) {
+                throw std::runtime_error("Film with the same title already exists: " + args[0]);
+            }
+        }
+
         media = std::make_shared<Film>(args[0], args[1], ageLimit);
     }
     else if (mediaType == "game") {
@@ -26,15 +39,21 @@ void LibrarySystem::addMedia(const std::string& mediaType, const std::vector<std
         }
         int pegi = std::stoi(args[3]);
 
+        for (const auto& existingMedia : mediaCollection) {
+            if (existingMedia->getType() == "game" && existingMedia->getTitle() == args[0]) {
+                throw std::runtime_error("Game with the same title already exists: " + args[0]);
+            }
+        }
+
         media = std::make_shared<Game>(args[0], args[1], args[2], pegi);
     }
-
     else {
         throw std::invalid_argument("Unsupported media type: " + mediaType);
     }
 
     mediaCollection.push_back(media);
 }
+
 
 void LibrarySystem::addBookMedia(const std::string& title, const std::string& ISBN) {
     addMedia("book", { title, ISBN });
@@ -120,12 +139,52 @@ std::string LibrarySystem::getWhoBorrowedMedia(const std::string& mediaType, con
     throw std::runtime_error("Media not borrowed: " + title);
 }
 
-void LibrarySystem::rentMedia(const std::string& clientName, const std::string& mediaType, const std::string& title) {
-    auto client = getClient(clientName);
-    auto media = findMedia(mediaType, title);
+//void LibrarySystem::rentMedia(const std::string& clientName, const std::string& mediaType, const std::string& title) {
+//    auto client = getClient(clientName);
+//    auto media = findMedia(mediaType, title);
+//
+//    if (media->getBorrowedStatus())
+//        throw std::runtime_error("Media already borrowed: " + title);
+//
+//    if (media->getType() == "film")
+//    {
+//        auto film = std::dynamic_pointer_cast<Film>(media);
+//        if (client.getAge() < film->getAgeLimit())
+//            throw std::runtime_error("Client does not meet age limit for this film.");
+//    }
+//
+//    if (clientMediaMap[client].size() >= 5)
+//        throw std::runtime_error("Client has already borrowed the maximum number of items.");
+//
+//    if (std::find(clientMediaMap[client].begin(), clientMediaMap[client].end(), media) != clientMediaMap[client].end())
+//        throw std::runtime_error("Client already borrowed this media: " + title);
+//
+//    media->borrow();
+//    clientMediaMap[client].push_back(media);
+//}
 
-    if (media->getBorrowedStatus())
+void LibrarySystem::rentMedia(const std::string& clientName, const std::string& mediaType, const std::string& title) {
+    auto clientIt = std::find_if(clients.begin(), clients.end(),
+        [&clientName](const Client& c) { return c.getName() == clientName; });
+
+    if (clientIt == clients.end()) {
+        throw std::runtime_error("Client not found: " + clientName);
+    }
+    Client& client = *clientIt;
+
+    auto mediaIt = std::find_if(mediaCollection.begin(), mediaCollection.end(),
+        [&mediaType, &title](const std::shared_ptr<Media>& m) {
+            return m->getType() == mediaType && m->getTitle() == title;
+        });
+
+    if (mediaIt == mediaCollection.end()) {
+        throw std::runtime_error("Media not found: " + title);
+    }
+    std::shared_ptr<Media> media = *mediaIt;
+
+    if (media->getBorrowedStatus()) {
         throw std::runtime_error("Media already borrowed: " + title);
+    }
 
     if (media->getType() == "film")
     {
@@ -143,6 +202,15 @@ void LibrarySystem::rentMedia(const std::string& clientName, const std::string& 
     media->borrow();
     clientMediaMap[client].push_back(media);
 }
+
+
+
+std::string LibrarySystem::generateUniqueKey(const std::string& type, const std::string& title) {
+    return type + ":" + title;
+}
+
+
+
 
 void LibrarySystem::returnMedia(const std::string& mediaType, const std::string& title) {
     for (auto& [client, borrowedMedias] : clientMediaMap) {
@@ -237,9 +305,17 @@ void LibrarySystem::addClient(const std::string& name, const std::string& firstn
                 && client.getAddress() == address && client.getPhoneNumber() == phoneNumber && client.getMail() == mail;
         });
 
-    if (it != clients.end()) {
+    if (it != clients.end())
         throw std::runtime_error("Client is already registered.");
-    }
+
+    if (!isValidPhoneNumber(phoneNumber))
+        throw std::runtime_error("Error: Invalid phone number. It should contain only digits.");
+
+    if (mail.empty())
+        throw std::runtime_error("Error: Email cannot be empty.");
+
+    if (!isValidEmail(mail))
+        throw std::runtime_error("Error: Invalid email address. It should contain an '@' and a '.'.");
 
 
     clients.emplace_back(name, firstname, age, address, phoneNumber, mail);
@@ -307,4 +383,14 @@ std::string LibrarySystem::listClients() const {
             << "Mail : " << client.getMail() << "\n\n";
     }
     return oss.str();
+}
+
+bool LibrarySystem::isValidPhoneNumber(const std::string& phoneNumber) {
+    std::regex phonePattern("^[0-9]+$");
+    return std::regex_match(phoneNumber, phonePattern);
+}
+
+bool LibrarySystem::isValidEmail(const std::string& email) {
+    std::regex emailPattern("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    return std::regex_match(email, emailPattern);
 }
