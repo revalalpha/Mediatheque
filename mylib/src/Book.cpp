@@ -1,5 +1,4 @@
 #include "Book.h"
-#include <sstream>
 
 Book::Book(const std::string& title, const std::string& isbn)
     : Media(title, MediaState::Available), m_isbn(isbn) {}
@@ -14,6 +13,7 @@ std::string Book::getISBN() const
 }
 
 bool Book::isValidISBN(const std::string& isbn) {
+    // regex found on internet
     return std::regex_match(isbn, std::regex("\\d+"));
 }
 

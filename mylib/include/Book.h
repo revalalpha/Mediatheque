@@ -3,6 +3,7 @@
 
 #include "Media.h"
 #include <regex>
+#include <sstream>
 
 class Book : public Media {
 public:

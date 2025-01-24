@@ -8,7 +8,7 @@ std::string Film::getType() const {
 }
 
 bool Film::isValidFormat(const std::string& format) {
-    return format == "Blu-ray" || format == "DVD";
+    return format == "Bluray" || format == "bluray" || format == "DVD" || format == "dvd";
 }
 
 std::string Film::getInfo() const {

@@ -45,6 +45,3 @@ bool Client::operator==(const Client& other) const
     return m_name == other.m_name && m_firstName == other.m_firstName && m_age == other.m_age
         && m_address == other.m_address && m_phoneNumber == other.m_phoneNumber && m_mail == other.m_mail;
 }
-
-
-

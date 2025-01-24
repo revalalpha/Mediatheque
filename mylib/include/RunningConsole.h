@@ -1,7 +1,9 @@
+#ifndef RUNNING_CONSOLE_H
+#define RUNNING_CONSOLE_H
+
 #include "LibrarySystem.h"
 #include "Console.h"
-#include <stdexcept>
-#include <sstream>
+
 
 class Database {
 public:
@@ -17,3 +19,5 @@ private:
     std::string m_lastCommand;
     LibrarySystem* m_library;
 };
+
+#endif

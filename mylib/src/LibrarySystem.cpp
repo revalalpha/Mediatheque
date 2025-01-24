@@ -1,52 +1,13 @@
 #include "LibrarySystem.h"
 
 void LibrarySystem::addMedia(const std::string& mediaType, const std::vector<std::string>& args) {
-    std::shared_ptr<Media> media;
-
-    if (mediaType == "book")
-    {
-        if (args.size() != 2)
-            throw std::invalid_argument("Usage: addMedia book <title> <isbn>");
-
-        for (const auto& existingMedia : mediaCollection) {
-            if (existingMedia->getType() == "book")
-            {
-                auto existingBook = std::dynamic_pointer_cast<Book>(existingMedia);
-                if (existingBook && existingBook->getISBN() == args[1])
-                    throw std::runtime_error("Book with the same ISBN already exists: " + args[1]);
-            }
-        }
-
-        media = std::make_shared<Book>(args[0], args[1]);
+    try {
+        auto media = MediaFactory::createMedia(mediaType, args);
+        mediaCollection.push_back(media);
     }
-    else if (mediaType == "film")
-    {
-        if (args.size() != 3)
-            throw std::invalid_argument("Usage: addMedia film <title> <format> <ageLimit>");
-        int ageLimit = std::stoi(args[2]);
-
-        for (const auto& existingMedia : mediaCollection)
-            if (existingMedia->getType() == "film" && existingMedia->getTitle() == args[0])
-                throw std::runtime_error("Film with the same title already exists: " + args[0]);
-
-        media = std::make_shared<Film>(args[0], args[1], ageLimit);
+    catch (const std::exception& e) {
+        throw std::runtime_error("Failed to add media: " + std::string(e.what()));
     }
-    else if (mediaType == "game")
-    {
-        if (args.size() != 4)
-            throw std::invalid_argument("Usage: addMedia game <title> <studio> <genre> <pegi>");
-        int pegi = std::stoi(args[3]);
-
-        for (const auto& existingMedia : mediaCollection)
-            if (existingMedia->getType() == "game" && existingMedia->getTitle() == args[0])
-                throw std::runtime_error("Game with the same title already exists: " + args[0]);
-
-        media = std::make_shared<Game>(args[0], args[1], args[2], pegi);
-    }
-    else
-        throw std::invalid_argument("Unsupported media type: " + mediaType);
-
-    mediaCollection.push_back(media);
 }
 
 void LibrarySystem::addBookMedia(const std::string& title, const std::string& ISBN)
@@ -63,17 +24,6 @@ void LibrarySystem::addGameMedia(const std::string& title, const std::string& st
 {
     addMedia("game", { title, studio, genre, std::to_string(PEGI) });
 }
-
-//void LibrarySystem::removeMedia(const std::string& mediaType, const std::string& title)
-//{
-//    auto it = std::remove_if(mediaCollection.begin(), mediaCollection.end(),
-//        [&mediaType, &title](const std::shared_ptr<Media>& media) {
-//            return media->getType() == mediaType && media->getTitle() == title;
-//        });
-//    if (it == mediaCollection.end())
-//        throw std::runtime_error("Media not found: " + title);
-//    mediaCollection.erase(it, mediaCollection.end());
-//}
 
 void LibrarySystem::removeMedia(const std::string& mediaType, const std::string& title) {
     auto it = std::find_if(mediaCollection.begin(), mediaCollection.end(),
@@ -99,33 +49,26 @@ std::string LibrarySystem::listMedia() const {
     return oss.str();
 }
 
-std::string LibrarySystem::listMediaByState(const std::string& state) const
-{
-    std::string result;
+std::string LibrarySystem::listMediaByState(const std::string& state) const {
     MediaState desiredState;
-
     if (state == "available")
         desiredState = MediaState::Available;
     else if (state == "borrowed")
         desiredState = MediaState::Borrowed;
     else
-        return "Invalid state. Please use 'available' or 'borrowed'.";
-    for (const auto& mediaPtr : mediaCollection)
-        if (mediaPtr->getState() == desiredState)
-            result += mediaPtr->getTitle() + "\n";
+        throw std::invalid_argument("Invalid state. Use 'available' or 'borrowed'.");
 
-    if (result.empty())
-        result = "No media found in the requested state.";
-
-    return result;
+    std::ostringstream oss;
+    for (const auto& media : mediaCollection) {
+        if (media->getState() == desiredState)
+            oss << media->getTitle() << "\n";
+    }
+    return oss.str().empty() ? "No media found in the requested state." : oss.str();
 }
 
-std::string LibrarySystem::getMediaState(const std::string& mediaType, const std::string& title) const
-{
-    for (const auto& media : mediaCollection)
-        if (media->getType() == mediaType && media->getTitle() == title)
-            return media->getBorrowedStatus() ? "Borrowed" : "Available";
-    throw std::runtime_error("Media not found: " + title);
+std::string LibrarySystem::getMediaState(const std::string& mediaType, const std::string& title) const {
+    auto media = findMedia(mediaType, title);
+    return media->getBorrowedStatus() ? "Borrowed" : "Available";
 }
 
 std::string LibrarySystem::getWhoBorrowedMedia(const std::string& mediaType, const std::string& title) const {
@@ -172,23 +115,6 @@ void LibrarySystem::rentMedia(const std::string& clientName, const std::string& 
     media->borrow();
     clientMediaMap[client].push_back(media);
 }
-
-//void LibrarySystem::returnMedia(const std::string& mediaType, const std::string& title)
-//{
-//    for (auto& [client, borrowedMedias] : clientMediaMap) {
-//        auto it = std::find_if(borrowedMedias.begin(), borrowedMedias.end(),
-//            [&mediaType, &title](const std::shared_ptr<Media>& media) {
-//                return media->getType() == mediaType && media->getTitle() == title;
-//            });
-//        if (it != borrowedMedias.end())
-//        {
-//            (*it)->returnMedia();
-//            borrowedMedias.erase(it);
-//            return;
-//        }
-//    }
-//    throw std::runtime_error("Media not borrowed: " + title);
-//}
 
 void LibrarySystem::returnMedia(const std::string& clientName, const std::string& mediaType, const std::string& title) {
     auto client = getClient(clientName);
@@ -250,14 +176,16 @@ std::string LibrarySystem::showMediaBorrowedByClientWithMail(const std::string& 
     return result;
 }
 
-std::shared_ptr<Media> LibrarySystem::findMedia(const std::string& mediaType, const std::string& title) const
-{
-    for (const auto& media : mediaCollection)
-    {
-        if (media->getTitle() == title && media->getType() == mediaType)
-            return media;
-    }
-    throw std::runtime_error("Media not found.");
+std::shared_ptr<Media> LibrarySystem::findMedia(const std::string& mediaType, const std::string& title) const {
+    auto it = std::find_if(mediaCollection.begin(), mediaCollection.end(),
+        [&mediaType, &title](const std::shared_ptr<Media>& media) {
+            return media->getType() == mediaType && media->getTitle() == title;
+        });
+
+    if (it == mediaCollection.end())
+        throw std::runtime_error("Media not found: " + title);
+
+    return *it;
 }
 
 Client LibrarySystem::getClient(const std::string& clientName) const
@@ -360,6 +288,20 @@ void LibrarySystem::showMedia(const std::string& clientName) {
         oss << " - " << media->getTitle() << " (" << media->getType() << ")\n";
     }
 }
+
+std::string LibrarySystem::getMediaInfo(const std::string& type, const std::string& title) const
+{
+    for (const auto& media : mediaCollection)
+    {
+        if (media->getType() == type && media->getTitle() == title)
+        {
+            return media->getInfo();
+        }
+    }
+
+    throw std::runtime_error("Media not found: " + title);
+}
+
 
 bool LibrarySystem::isValidPhoneNumber(const std::string& phoneNumber)
 {

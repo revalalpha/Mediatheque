@@ -3,9 +3,7 @@
 
 #include "Media.h"
 #include "Client.h"
-#include "Book.h"
-#include "Film.h"
-#include "Game.h"
+#include "MediaFactory.h"
 
 #include <algorithm>
 #include <sstream>
@@ -45,7 +43,7 @@ public:
     bool isValidPhoneNumber(const std::string& phoneNumber);
     bool isValidEmail(const std::string& email);
 
-    std::string generateUniqueKey(const std::string& type, const std::string& title);
+    std::string getMediaInfo(const std::string& type, const std::string& title)const ;
 
 private:
     std::shared_ptr<Media> findMedia(const std::string& mediaType, const std::string& title) const;

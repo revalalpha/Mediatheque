@@ -159,7 +159,27 @@ void Database::Exe()
 
                 m_console->displayLine("Media added successfully.\n", Green);
             }
+            else if (command == "removeMedia")
+            {
+                std::string type, title;
+                stream >> type >> title;
 
+                if (type.empty() || title.empty())
+                {
+                    m_console->displayLine("Error: Media type and title are required to remove media.\n", Red);
+                    continue;
+                }
+
+                try
+                {
+                    m_library->removeMedia(type, title);
+                    m_console->displayLine("Media removed successfully.\n", Green);
+                }
+                catch (const std::exception& e)
+                {
+                    m_console->displayLine(std::string("Error: ") + e.what() + "\n", Red);
+                }
+            }
             else if (command == "listMedia")
             {
                 std::string state;
@@ -188,15 +208,57 @@ void Database::Exe()
                 m_library->returnMedia(name, type, title);
                 m_console->displayLine("Media returned successfully.\n", Green);
             }
-            else if (command == "show")
+            else if (command == "showMedia")
             {
                 std::string clientName, firstName, email;
                 stream >> clientName;
-                if (stream >> firstName)
-                    m_console->displayLine(m_library->showMediaBorrowedByClientWithNameAndFirstName(clientName, firstName) + "\n", White);
-                else if (stream >> email)
-                    m_console->displayLine(m_library->showMediaBorrowedByClientWithMail(email) + "\n", White);
+
+                if (clientName.empty())
+                {
+                    m_console->displayLine("Error: Client name is required.\n", Red);
+                    continue;
+                }
+                try
+                {
+                    if (stream >> firstName)
+                    {
+                        m_console->displayLine(
+                            m_library->showMediaBorrowedByClientWithNameAndFirstName(clientName, firstName) + "\n",
+                            White);
+                    }
+                    else if (stream >> email)
+                    {
+                        m_console->displayLine(
+                            m_library->showMediaBorrowedByClientWithMail(email) + "\n",
+                            White);
+                    }
+                }
+                catch (const std::exception& e)
+                {
+                    m_console->displayLine(std::string("Error: ") + e.what() + "\n", Red);
+                }
             }
+            else if (command == "who")
+            {
+                std::string type, title;
+                stream >> type >> title;
+
+                if (type.empty() || title.empty())
+                {
+                    m_console->displayLine("Error: Media type and title are required to determine the borrower.\n", Red);
+                    continue;
+                }
+                try
+                {
+                    std::string borrower = m_library->getWhoBorrowedMedia(type, title);
+                    m_console->displayLine("The media \"" + title + "\" is borrowed by: " + borrower + "\n", White);
+                }
+                catch (const std::exception& e)
+                {
+                    m_console->displayLine(std::string("Error: ") + e.what() + "\n", Red);
+                }
+            }
+
             else
                 m_console->displayLine("Unknown command. Type 'help' to see the list of available commands.\n", Red);
         }
