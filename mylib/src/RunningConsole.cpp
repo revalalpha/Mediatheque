@@ -1,6 +1,4 @@
 #include "RunningConsole.h"
-
-#include <iostream>
 #include <stdexcept>
 #include <sstream>
 
@@ -15,7 +13,6 @@ Database::~Database() {
 }
 
 void Database::addString(const std::string& str) {
-    // Ajoute la commande dans l'historique si elle est différente de la précédente.
     if (isNewCommand(str)) {
         m_lastCommand = str;
     }
@@ -26,111 +23,149 @@ bool Database::isNewCommand(const std::string& str) const {
 }
 
 void Database::Exe() {
+    m_console->displayLine(
+        "   ------------------------------------------------\n"
+        "   ------> Welcome to the god Media Library <------\n"
+        "   ------------------------------------------------\n\n", Yellow);
+    m_console->displayLine(
+        "Write the command: 'help' to see a list of all commands\n",
+        Magenta);
+
     std::string input;
 
     while (true) {
-        // Affiche le prompt.
-        m_console->display("> ");
-
-        // Récupère l'entrée utilisateur.
+        m_console->display("> ", Cyan);
         input = m_console->readLine();
 
         if (input == "exit" || input == "quit") {
-            break; // Quitte le programme si la commande est "exit".
+            break;
         }
 
-        // Ajoute la commande à l'historique.
         addString(input);
 
-        // Interprète et exécute la commande.
         try {
             std::istringstream stream(input);
             std::string command;
             stream >> command;
 
-            if (command == "addClient") {
+            if (command == "help") {
+                m_console->displayLine(
+                    "Available commands:\n"
+                    "  addClient <name> <firstname> <age> <address> <phoneNumber> <email>\n"
+                    "      Add a new client to the library system.\n"
+                    "  listClient\n"
+                    "      List all registered clients.\n"
+                    "  removeClient <name> [<firstname> | <email>]\n"
+                    "      Remove a client by name, name and firstname, or email.\n"
+                    "  addMedia <type> <title> [<args>]\n"
+                    "      Add a new media to the library. Supported types: book, film, game.\n"
+                    "      For books: <title> <ISBN>\n"
+                    "      For films: <title> <support> <ageLimit>\n"
+                    "      For games: <title> <studio> <genre> <PEGI>\n"
+                    "  listMedia [<state>]\n"
+                    "      List all media, optionally filtered by state ('available' or 'borrowed').\n"
+                    "  stateMedia <type> <title>\n"
+                    "      Show the state ('Available' or 'Borrowed') of a specific media.\n"
+                    "  rent <clientName> <type> <title>\n"
+                    "      Rent a media to a client.\n"
+                    "  returnMedia <type> <title>\n"
+                    "      Return a borrowed media.\n"
+                    "  showMedia <clientName> [<firstname> | <email>]\n"
+                    "      Show media borrowed by a specific client.\n"
+                    "  exit | quit\n"
+                    "      Exit the application.\n", Blue);
+            }
+            else if (command == "addClient") {
                 std::string name, firstname, address, phoneNumber, email;
                 int age;
 
                 stream >> name >> firstname >> age >> address >> phoneNumber >> email;
                 m_library->addClient(name, firstname, age, address, phoneNumber, email);
-                m_console->display("Client added successfully.\n");
+                m_console->displayLine("Client added successfully.\n", Green);
             }
             else if (command == "listClient") {
-                m_console->display(m_library->listClients() + "\n");
+                m_console->displayLine(m_library->listClients() + "\n", White);
             }
             else if (command == "removeClient") {
                 std::string name, firstname, email;
                 stream >> name;
+
                 if (stream >> firstname) {
                     m_library->removeClientByNameAndFirstName(name, firstname);
                 }
                 else if (stream >> email) {
                     m_library->removeClientByMail(email);
                 }
-                m_console->display("Client removed successfully.\n");
+                else {
+                    m_library->removeClientByName(name);
+                }
+
+                m_console->displayLine("Client removed successfully.\n", Green);
             }
             else if (command == "addMedia") {
-                std::string type, title, ISBN, support, studio, PEGI, genre;
-                int ageLimit = 0;
+                std::string type, title, ISBN, support, studio, genre;
+                int ageLimit = 0, PEGI = 0;
 
                 stream >> type >> title;
+
                 if (type == "book") {
                     stream >> ISBN;
-                    m_library->addBookMedia(type, title, ISBN);
+                    m_library->addBookMedia(title, ISBN);
                 }
                 else if (type == "film") {
-                    stream >> support >> ageLimit; // Support, Age Limit
-                    m_library->addFilmMedia(type, title, support, ageLimit);
+                    stream >> support >> ageLimit;
+                    m_library->addFilmMedia(title, support, ageLimit);
                 }
                 else if (type == "game") {
-                    stream >> studio >> genre >> PEGI; // Studio, Genre, PEGI
-                    m_library->addGameMedia(type, title, studio, PEGI, genre);
+                    stream >> studio >> genre >> PEGI;
+                    m_library->addGameMedia(title, studio, genre, PEGI);
                 }
-                m_console->display("Media added successfully.\n");
+
+                m_console->displayLine("Media added successfully.\n", Green);
             }
             else if (command == "listMedia") {
                 std::string state;
                 if (stream >> state) {
-                    m_console->display(m_library->listMediaByState(state) + "\n");
+                    m_console->displayLine(m_library->listMediaByState(state) + "\n", White);
                 }
                 else {
-                    m_console->display(m_library->listMedia() + "\n");
+                    m_console->displayLine(m_library->listMedia() + "\n", White);
                 }
             }
             else if (command == "stateMedia") {
                 std::string type, name;
                 stream >> type >> name;
-                m_console->display(m_library->getMediaState(type, name) + "\n");
+                m_console->displayLine(m_library->getMediaState(type, name) + "\n", White);
             }
             else if (command == "rent") {
                 std::string clientName, type, name;
                 stream >> clientName >> type >> name;
                 m_library->rentMedia(clientName, type, name);
-                m_console->display("Media rented successfully.\n");
+                m_console->displayLine("Media rented successfully.\n", Green);
             }
             else if (command == "returnMedia") {
                 std::string type, name;
                 stream >> type >> name;
                 m_library->returnMedia(type, name);
-                m_console->display("Media returned successfully.\n");
+                m_console->displayLine("Media returned successfully.\n", Green);
             }
             else if (command == "showMedia") {
                 std::string clientName, firstName, email;
                 stream >> clientName;
+
                 if (stream >> firstName) {
-                    m_console->display(m_library->showMediaBorrowedByClientWithNameAndFirstName(clientName, firstName) + "\n");
+                    m_console->displayLine(m_library->showMediaBorrowedByClientWithNameAndFirstName(clientName, firstName) + "\n", White);
                 }
                 else if (stream >> email) {
-                    m_console->display(m_library->showMediaBorrowedByClientWithMail(email) + "\n");
+                    m_console->displayLine(m_library->showMediaBorrowedByClientWithMail(email) + "\n", White);
                 }
             }
             else {
-                m_console->display("Unknown command.\n");
+                m_console->displayLine("Unknown command. Type 'help' to see the list of available commands.\n", Red);
             }
         }
         catch (const std::exception& e) {
-            m_console->display(std::string("Error: ") + e.what() + "\n");
+            m_console->displayLine(std::string("Error: ") + e.what() + "\n", Red);
         }
     }
 }

@@ -7,11 +7,14 @@
 
 enum Color
 {
-    Red
+      Red
     , Green
     , Blue
     , White
     , Black
+    , Yellow
+    , Cyan
+    , Magenta
 };
 
 class ConsoleFramebufferPrivateImpl;
@@ -27,7 +30,8 @@ public:
     void writeConsol();
     void parseCommand(const std::string& command, std::string& action, std::vector<std::string>& args);
     std::string getLastCommand();
-    void display(const std::string& message);
+    void display(const std::string& text, Color color);
+    void displayLine(const std::string& text, Color color);
     std::string readLine();
 private:
     ConsoleFramebufferPrivateImpl* m_impl;

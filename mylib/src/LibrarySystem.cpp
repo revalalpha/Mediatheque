@@ -36,20 +36,16 @@ void LibrarySystem::addMedia(const std::string& mediaType, const std::vector<std
     mediaCollection.push_back(media);
 }
 
-void LibrarySystem::addBookMedia(const std::string& mediaType, const std::string& title, const std::string& ISBN)
-{
-
+void LibrarySystem::addBookMedia(const std::string& title, const std::string& ISBN) {
+    addMedia("book", { title, ISBN });
 }
 
-void LibrarySystem::addFilmMedia(const std::string& mediaType, const std::string& title, const std::string& support, const int& ageLimit)
-{
-
+void LibrarySystem::addFilmMedia(const std::string& title, const std::string& support, int ageLimit) {
+    addMedia("film", { title, support, std::to_string(ageLimit) });
 }
 
-void LibrarySystem::addGameMedia(const std::string& mediaType, const std::string& title, const std::string& studio, const std::string& PEGI,
-    const std::string& genre)
-{
-
+void LibrarySystem::addGameMedia(const std::string& title, const std::string& studio, const std::string& genre, int PEGI) {
+    addMedia("game", { title, studio, genre, std::to_string(PEGI) });
 }
 
 void LibrarySystem::removeMedia(const std::string& mediaType, const std::string& title) {
@@ -63,31 +59,18 @@ void LibrarySystem::removeMedia(const std::string& mediaType, const std::string&
     mediaCollection.erase(it, mediaCollection.end());
 }
 
-//std::string LibrarySystem::listMedia() const {
-//    std::ostringstream oss;
-//    for (const auto& media : mediaCollection) {
-//        oss << media->getInfo() << "\n";
-//    }
-//    return oss.str();
-//}
-
 std::string LibrarySystem::listMedia() const {
-    std::string result;
-    for (const auto& media : mediaCollection) {
-        result += media->getInfo() + "\n";
+    if (mediaCollection.empty()) {
+        return "No media available.\n";
     }
-    return result;
+
+    std::ostringstream oss;
+    for (const auto& media : mediaCollection) {
+        oss << media->getInfo() << "\n";
+    }
+    return oss.str();
 }
 
-//std::string LibrarySystem::listMediaByState(bool isBorrowed) const {
-//    std::string result;
-//    for (const auto& media : mediaCollection) {
-//        if (media->getBorrowedStatus() == isBorrowed) {
-//            result += media->getTitle() + "\n";
-//        }
-//    }
-//    return result;
-//}
 
 std::string LibrarySystem::listMediaByState(const std::string& state) const {
     std::string result;
@@ -141,18 +124,21 @@ void LibrarySystem::rentMedia(const std::string& clientName, const std::string& 
     auto client = getClient(clientName);
     auto media = findMedia(mediaType, title);
 
-    if (media->getBorrowedStatus()) {
+    if (media->getBorrowedStatus())
         throw std::runtime_error("Media already borrowed: " + title);
-    }
-    if (media->getType() == "film") {
+
+    if (media->getType() == "film")
+    {
         auto film = std::dynamic_pointer_cast<Film>(media);
-        if (client.getAge() < film->getAgeLimit()) {
+        if (client.getAge() < film->getAgeLimit())
             throw std::runtime_error("Client does not meet age limit for this film.");
-        }
     }
-    if (clientMediaMap[client].size() >= 5) {
+
+    if (clientMediaMap[client].size() >= 5)
         throw std::runtime_error("Client has already borrowed the maximum number of items.");
-    }
+
+    if (std::find(clientMediaMap[client].begin(), clientMediaMap[client].end(), media) != clientMediaMap[client].end())
+        throw std::runtime_error("Client already borrowed this media: " + title);
 
     media->borrow();
     clientMediaMap[client].push_back(media);
@@ -259,6 +245,21 @@ void LibrarySystem::addClient(const std::string& name, const std::string& firstn
     clients.emplace_back(name, firstname, age, address, phoneNumber, mail);
 }
 
+void LibrarySystem::removeClientByName(const std::string& name) {
+    auto it = std::remove_if(clients.begin(), clients.end(),
+        [&name](const Client& client) {
+            return client.getName() == name;
+        });
+
+    if (it != clients.end()) {
+        clients.erase(it, clients.end());
+        std::cout << "Client removed successfully.\n";
+    }
+    else {
+        throw std::runtime_error("Client not found.");
+    }
+}
+
 
 void LibrarySystem::removeClientByNameAndFirstName(const std::string& name, const std::string& firstName) {
     auto it = std::find_if(clients.begin(), clients.end(),
@@ -267,27 +268,29 @@ void LibrarySystem::removeClientByNameAndFirstName(const std::string& name, cons
         });
 
     if (it == clients.end()) {
-        throw std::runtime_error("Client not found.");
+        throw std::runtime_error("Client not found with the name: " + name + " and first name: " + firstName);
     }
 
     clientMediaMap.erase(*it);
     clients.erase(it);
+    std::cout << "Client removed successfully: " << name << " " << firstName << std::endl;
 }
 
-void  LibrarySystem::removeClientByMail(const std::string& mail)
-{
+void LibrarySystem::removeClientByMail(const std::string& mail) {
     auto it = std::find_if(clients.begin(), clients.end(),
         [&mail](const Client& client) {
             return client.getMail() == mail;
         });
 
     if (it == clients.end()) {
-        throw std::runtime_error("Client not found.");
+        throw std::runtime_error("Client not found with the email: " + mail);
     }
 
     clientMediaMap.erase(*it);
     clients.erase(it);
+    std::cout << "Client removed successfully with email: " << mail << std::endl;
 }
+
 
 std::string LibrarySystem::listClients() const {
     if (clients.empty()) {
@@ -296,7 +299,12 @@ std::string LibrarySystem::listClients() const {
 
     std::ostringstream oss;
     for (const auto& client : clients) {
-        oss << "Name : " << client.getName() << ", Age : " << client.getAge() << "\n";
+        oss << "Name : " << client.getName() << "\n"
+            << "FirstName : " << client.getFirstName() << "\n"
+            << "Age  : " << client.getAge() << "\n"
+            << "Address : " << client.getAddress() << "\n"
+            << "Phone Number  : " << client.getPhoneNumber() << "\n"
+            << "Mail : " << client.getMail() << "\n\n";
     }
     return oss.str();
 }
