@@ -129,9 +129,8 @@ void ConsoleFramebufferPrivateImpl::parseCommand(const std::string& command, std
     std::istringstream iss(command);
     iss >> action; 
     std::string arg;
-    while (iss >> arg) {
+    while (iss >> arg)
         args.push_back(arg);
-    }
 }
 
 
@@ -261,9 +260,7 @@ void ConsoleFramebufferPrivateImpl::setString(std::string text, Color color, Col
 void ConsoleFramebufferPrivateImpl::setString(int row, int i)
 {
     for (int idx = 0; idx < m_toWrite[i].size(); ++idx)
-    {
         setCharacter(row, idx, m_toWrite[i][idx], m_colorToWrite[i], m_backColorToWrite[i]);
-    }
 }
 void ConsoleFramebufferPrivateImpl::eraseEmtpyHistory()
 {
@@ -284,18 +281,15 @@ void ConsoleFramebufferPrivateImpl::printText()
 {
     int row = 0;
     for (auto i = m_toWrite.size() - myMin((m_numRows - 1), m_toWrite.size()); i < m_toWrite.size(); ++i)
-    {
         setString(row, i);
         ++row;
-    }
     //write what you write
     for (int idx = 0; idx < m_history[m_idx].size(); ++idx)
-    {
         setCharacter(row, idx, m_history[m_idx][idx], White, Black);
-    }
 }
 
-std::string ConsoleFramebufferPrivateImpl::readLine() {
+std::string ConsoleFramebufferPrivateImpl::readLine()
+{
     std::string input;
     std::getline(std::cin, input);
     return input;
